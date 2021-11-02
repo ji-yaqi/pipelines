@@ -231,6 +231,10 @@ func (e *UserError) String() string {
 		e.internalError)
 }
 
+func (e *UserError) Unwrap() error {
+	return e.internalError
+}
+
 func (e *UserError) wrapf(format string, args ...interface{}) *UserError {
 	return newUserError(errors.Wrapf(e.internalError, format, args...),
 		e.externalMessage, e.externalStatusCode)
@@ -326,7 +330,8 @@ func TerminateIfError(err error) {
 	}
 }
 
-// IsNotFound returns whether an error indicates that a resource was "not found".
+// IsNotFound returns whether an error indicates that a Kubernetes resource was "not found".
+// This does not identify UserError with codes.NotFound errors, use IsUserErrorCodeMatch instead.
 func IsNotFound(err error) bool {
 	return reasonForError(err) == k8metav1.StatusReasonNotFound
 }

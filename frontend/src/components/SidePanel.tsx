@@ -53,16 +53,17 @@ interface SidePanelProps {
   isOpen: boolean;
   onClose: () => void;
   title: string;
+  defaultWidth?: string | number;
 }
 
 class SidePanel extends React.Component<SidePanelProps> {
   public render(): JSX.Element {
-    const { isBusy, isOpen, onClose, title } = this.props;
+    const { isBusy, isOpen, onClose, title, defaultWidth } = this.props;
     return (
       <Slide in={isOpen} direction='left'>
         <Resizable
           className={css.sidepane}
-          defaultSize={{ width: '70%' }}
+          defaultSize={{ width: defaultWidth ? defaultWidth : '70%' }}
           maxWidth='90%'
           minWidth={100}
           enable={{
@@ -79,7 +80,7 @@ class SidePanel extends React.Component<SidePanelProps> {
           {isOpen && (
             <div className={commonCss.page}>
               <div className={commonCss.flex}>
-                <Button className={css.closeButton} onClick={onClose}>
+                <Button aria-label='close' className={css.closeButton} onClick={onClose}>
                   <CloseIcon />
                 </Button>
                 <div className={css.nodeName}>{title}</div>

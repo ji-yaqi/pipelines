@@ -12,6 +12,7 @@ metadata:
 data:
   appName: 'my-release'
   namespace: 'kubeflow'
+  emissaryExecutor: 'false'
   managedStorageEnabled: 'true'
   #
   managedStorageCloudSqlInstanceConnectionName: 'myproject:us-central1:myinstance'
@@ -840,11 +841,12 @@ subjects:
 apiVersion: v1
 data:
   # References:
-  # * https://github.com/argoproj/argo-workflows/blob/v3.1.1/config/config.go
-  # * https://github.com/argoproj/argo-workflows/blob/v3.1.1/docs/workflow-controller-configmap.md
-  # * https://github.com/argoproj/argo-workflows/blob/v3.1.1/docs/workflow-controller-configmap.yaml
+  # * https://github.com/argoproj/argo-workflows/blob/v3.1.14/config/config.go
+  # * https://github.com/argoproj/argo-workflows/blob/v3.1.14/docs/workflow-controller-configmap.md
+  # * https://github.com/argoproj/argo-workflows/blob/v3.1.14/docs/workflow-controller-configmap.yaml
 
-  containerRuntimeExecutor: docker
+  # emissary executor is a more portable default, see https://github.com/kubeflow/pipelines/issues/1654.
+  containerRuntimeExecutor: 'docker'
 
   # Note, some-string-{{without}}-template-interpretation is a way to avoid some brackets interpreted as template.
   # Reference: https://github.com/helm/helm/issues/2798#issuecomment-467319526
@@ -956,7 +958,7 @@ spec:
 
 ---
 # Source: kubeflow-pipelines/templates/pipeline.yaml
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: scheduledworkflows.kubeflow.org
@@ -974,10 +976,31 @@ spec:
   scope: Namespaced
   versions:
     - name: v1beta1
+      schema:
+        openAPIV3Schema:
+          properties:
+            apiVersion:
+              type: string
+            kind:
+              type: string
+            metadata:
+              type: object
+            spec:
+              type: object
+              x-kubernetes-preserve-unknown-fields: true
+              x-kubernetes-map-type: atomic
+            status:
+              type: object
+              x-kubernetes-preserve-unknown-fields: true
+              x-kubernetes-map-type: atomic
+          required:
+          - spec
+          - status
+          type: object
       served: true
       storage: true
 ---
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
@@ -995,6 +1018,22 @@ spec:
   scope: Namespaced
   versions:
     - name: v1beta1
+      schema:
+        openAPIV3Schema:
+          properties:
+            apiVersion:
+              type: string
+            kind:
+              type: string
+            metadata:
+              type: object
+            spec:
+              type: object
+              x-kubernetes-preserve-unknown-fields: true
+              x-kubernetes-map-type: atomic
+          required:
+          - spec
+          type: object
       served: true
       storage: true
 ---
@@ -1754,6 +1793,15 @@ metadata:
   name: kubeflow-pipelines-container-builder
 
 ---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kfp-launcher
+data:
+  defaultPipelineRoot: 'gs://mybucket/v2/artifacts'
+
+
+---
 # Source: kubeflow-pipelines/templates/metadata.yaml
 apiVersion: v1
 kind: Service
@@ -2084,7 +2132,7 @@ metadata:
 spec:
   descriptor:
     type: Kubeflow Pipelines
-    version: 1.7.0-alpha.1
+    version: 1.7.0-rc.3
     description: |-
       Reusable end-to-end ML workflow
     maintainers:

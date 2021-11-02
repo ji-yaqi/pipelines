@@ -43,6 +43,7 @@ var pipelineColumns = []string{
 	"pipeline_versions.PipelineId",
 	"pipeline_versions.Status",
 	"pipeline_versions.CodeSourceUrl",
+	"pipeline_versions.Description",
 }
 
 var pipelineVersionColumns = []string{
@@ -53,6 +54,7 @@ var pipelineVersionColumns = []string{
 	"pipeline_versions.PipelineId",
 	"pipeline_versions.Status",
 	"pipeline_versions.CodeSourceUrl",
+	"pipeline_versions.Description",
 }
 
 type PipelineStoreInterface interface {
@@ -67,7 +69,7 @@ type PipelineStoreInterface interface {
 	CreatePipelineVersion(*model.PipelineVersion, bool) (*model.PipelineVersion, error)
 	GetPipelineVersion(versionId string) (*model.PipelineVersion, error)
 	GetPipelineVersionWithStatus(versionId string, status model.PipelineVersionStatus) (*model.PipelineVersion, error)
-	ListPipelineVersions(pipelineId string, opts *list.Options) ([]*model.PipelineVersion, int, string, error)
+	ListPipelineVersions(pipelineId string, opts *list.Options) (versions []*model.PipelineVersion, totalSize int, nextPageToken string, err error)
 	DeletePipelineVersion(pipelineVersionId string) error
 	// Change status of a particular version.
 	UpdatePipelineVersionStatus(pipelineVersionId string, status model.PipelineVersionStatus) error
@@ -172,7 +174,7 @@ func (s *PipelineStore) scanRows(rows *sql.Rows) ([]*model.Pipeline, error) {
 		var defaultVersionId, namespace sql.NullString
 		var createdAtInSec int64
 		var status model.PipelineStatus
-		var versionUUID, versionName, versionParameters, versionPipelineId, versionCodeSourceUrl, versionStatus sql.NullString
+		var versionUUID, versionName, versionParameters, versionPipelineId, versionCodeSourceUrl, versionStatus, versionDescription sql.NullString
 		var versionCreatedAtInSec sql.NullInt64
 		if err := rows.Scan(
 			&uuid,
@@ -189,7 +191,8 @@ func (s *PipelineStore) scanRows(rows *sql.Rows) ([]*model.Pipeline, error) {
 			&versionParameters,
 			&versionPipelineId,
 			&versionStatus,
-			&versionCodeSourceUrl); err != nil {
+			&versionCodeSourceUrl,
+			&versionDescription); err != nil {
 			return nil, err
 		}
 		if defaultVersionId.Valid {
@@ -210,6 +213,7 @@ func (s *PipelineStore) scanRows(rows *sql.Rows) ([]*model.Pipeline, error) {
 					PipelineId:     versionPipelineId.String,
 					Status:         model.PipelineVersionStatus(versionStatus.String),
 					CodeSourceUrl:  versionCodeSourceUrl.String,
+					Description:    versionDescription.String,
 				}})
 		} else {
 			pipelines = append(pipelines, &model.Pipeline{
@@ -327,6 +331,7 @@ func (s *PipelineStore) CreatePipeline(p *model.Pipeline) (*model.Pipeline, erro
 				"Parameters":     newPipeline.DefaultVersion.Parameters,
 				"Status":         string(newPipeline.DefaultVersion.Status),
 				"PipelineId":     newPipeline.UUID,
+				"Description":    newPipeline.DefaultVersion.Description,
 				"CodeSourceUrl":  newPipeline.DefaultVersion.CodeSourceUrl}).
 		ToSql()
 	if err != nil {
@@ -482,7 +487,8 @@ func (s *PipelineStore) CreatePipelineVersion(v *model.PipelineVersion, updatePi
 				"Parameters":     newPipelineVersion.Parameters,
 				"PipelineId":     newPipelineVersion.PipelineId,
 				"Status":         string(newPipelineVersion.Status),
-				"CodeSourceUrl":  newPipelineVersion.CodeSourceUrl}).
+				"CodeSourceUrl":  newPipelineVersion.CodeSourceUrl,
+				"Description":    newPipelineVersion.Description}).
 		ToSql()
 	if versionErr != nil {
 		return nil, util.NewInternalServerError(
@@ -589,7 +595,7 @@ func (s *PipelineStore) GetPipelineVersionWithStatus(versionId string, status mo
 func (s *PipelineStore) scanPipelineVersionRows(rows *sql.Rows) ([]*model.PipelineVersion, error) {
 	var pipelineVersions []*model.PipelineVersion
 	for rows.Next() {
-		var uuid, name, parameters, pipelineId, codeSourceUrl, status sql.NullString
+		var uuid, name, parameters, pipelineId, codeSourceUrl, status, description sql.NullString
 		var createdAtInSec sql.NullInt64
 		if err := rows.Scan(
 			&uuid,
@@ -599,6 +605,7 @@ func (s *PipelineStore) scanPipelineVersionRows(rows *sql.Rows) ([]*model.Pipeli
 			&pipelineId,
 			&status,
 			&codeSourceUrl,
+			&description,
 		); err != nil {
 			return nil, err
 		}
@@ -610,13 +617,14 @@ func (s *PipelineStore) scanPipelineVersionRows(rows *sql.Rows) ([]*model.Pipeli
 				Parameters:     parameters.String,
 				PipelineId:     pipelineId.String,
 				CodeSourceUrl:  codeSourceUrl.String,
-				Status:         model.PipelineVersionStatus(status.String)})
+				Status:         model.PipelineVersionStatus(status.String),
+				Description:    description.String})
 		}
 	}
 	return pipelineVersions, nil
 }
 
-func (s *PipelineStore) ListPipelineVersions(pipelineId string, opts *list.Options) ([]*model.PipelineVersion, int, string, error) {
+func (s *PipelineStore) ListPipelineVersions(pipelineId string, opts *list.Options) (versions []*model.PipelineVersion, totalSize int, nextPageToken string, err error) {
 	errorF := func(err error) ([]*model.PipelineVersion, int, string, error) {
 		return nil, 0, "", util.NewInternalServerError(err, "Failed to list pipeline versions: %v", err)
 	}

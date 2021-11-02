@@ -28,12 +28,14 @@ import UnknownIcon from '@material-ui/icons/Help';
 import { color } from '../Css';
 import { logger, formatDateString } from '../lib/Utils';
 import { NodePhase, checkIfTerminated } from '../lib/StatusUtils';
+import { Execution } from 'src/third_party/mlmd/generated/ml_metadata/proto/metadata_store_pb';
 
 export function statusToIcon(
   status?: NodePhase,
   startDate?: Date | string,
   endDate?: Date | string,
   nodeMessage?: string,
+  mlmdState?: Execution.State,
 ): JSX.Element {
   status = checkIfTerminated(status, nodeMessage);
   // tslint:disable-next-line:variable-name
@@ -94,6 +96,11 @@ export function statusToIcon(
     default:
       logger.verbose('Unknown node phase:', status);
   }
+  if (mlmdState === Execution.State.CACHED) {
+    IconComponent = CachedIcon;
+    iconColor = color.success;
+    title = 'Execution was skipped and outputs were taken from cache';
+  }
   return (
     <Tooltip
       title={
@@ -105,12 +112,12 @@ export function statusToIcon(
         </div>
       }
     >
-      <span style={{ height: 18 }}>
+      <div>
         <IconComponent
           data-testid='node-status-sign'
           style={{ color: iconColor, height: 18, width: 18 }}
         />
-      </span>
+      </div>
     </Tooltip>
   );
 }

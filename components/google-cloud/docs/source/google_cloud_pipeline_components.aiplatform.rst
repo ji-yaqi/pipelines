@@ -1,10 +1,7 @@
-google\_cloud\_pipeline\_components.aiplatform package
-======================================================
-
-Module contents
----------------
+google\_cloud\_pipeline\_components.aiplatform components
+=========================================================
 
 .. automodule:: google_cloud_pipeline_components.aiplatform
-   :members: TimeSeriesDatasetCreateOp, TimeSeriesDatasetExportDataOp, AutoMLForecastingTrainingJobRunOp, ImageDatasetCreateOp, TabularDatasetCreateOp, TextDatasetCreateOp, VideoDatasetCreateOp ,ImageDatasetExportDataOp, TabularDatasetExportDataOp, TextDatasetExportDataOp, VideoDatasetExportDataOp, ImageDatasetImportDataOp, TextDatasetImportDataOp, VideoDatasetImportDataOp, CustomContainerTrainingJobRunOp, CustomPythonPackageTrainingJobRunOp, AutoMLImageTrainingJobRunOp, AutoMLTextTrainingJobRunOp, AutoMLTabularTrainingJobRunOp, AutoMLVideoTrainingJobRunOp, ModelDeployOp, ModelBatchPredictOp, ModelUploadOp, EndpointCreateOp
+   :members:
    :undoc-members:
    :show-inheritance:

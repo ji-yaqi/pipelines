@@ -12,20 +12,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from kfp.v2.dsl.component_decorator import component
-from kfp.dsl.io_types import (
+from kfp.v2.components.component_decorator import component
+
+from kfp.v2.components.importer_node import importer
+
+from kfp.v2.components.types.artifact_types import (
+    Artifact,
+    ClassificationMetrics,
+    Dataset,
+    HTML,
+    Markdown,
+    Metrics,
+    Model,
+    SlicedClassificationMetrics,
+)
+
+from kfp.v2.components.types.type_annotations import (
     Input,
     Output,
-    Artifact,
-    Dataset,
-    Model,
-    Metrics,
-    ClassificationMetrics,
-)
-from kfp.components import (
     InputPath,
     OutputPath,
 )
+
+# TODO: remove once experimental dsl merge back.
 from kfp.dsl import (
     graph_component,
     pipeline,
@@ -34,3 +43,9 @@ from kfp.dsl import (
     ExitHandler,
     ParallelFor,
 )
+
+PIPELINE_JOB_NAME_PLACEHOLDER = '{{$.pipeline_job_name}}'
+PIPELINE_JOB_RESOURCE_NAME_PLACEHOLDER = '{{$.pipeline_job_resource_name}}'
+PIPELINE_JOB_ID_PLACEHOLDER = '{{$.pipeline_job_uuid}}'
+PIPELINE_TASK_NAME_PLACEHOLDER = '{{$.pipeline_task_name}}'
+PIPELINE_TASK_ID_PLACEHOLDER = '{{$.pipeline_task_uuid}}'

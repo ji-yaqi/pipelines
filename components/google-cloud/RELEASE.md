@@ -1,6 +1,42 @@
-# Current Version 0.1.4.dev (Still in Development)
+# Current Version 0.2.0.dev (Still in Development)
+* Add notes for next release here.
 
-*   Add notes for next release here.
+# Release 0.1.9
+* Dataflow and wait components
+* Bug fixes
+
+# Release 0.1.8
+* Update the CustomJob component interface, and rename to custom_training_job_op
+* Define new artifact types for Google Cloud resources.
+* Update the AI Platform components. Added the component YAML and uses the new Google artifact types
+* Add Vertex notebook component
+* Various doc updates
+
+# Release 0.1.7
+* Add support for labels in custom_job wrapper. 
+* Add a component that connects the forecasting preprocessing and training components.
+* Write GCP_RESOURCE proto for the custom_job output.
+* Expose Custom Job parameters Service Account, Network and CMEK via Custom Job wrapper.
+* Increase KFP min version dependency.
+* AUpdate documentations for GCPC components.
+* Update typing checks to include Python3.6 deprecated types. 
+
+# Release 0.1.6
+* Experimental component for Model Forecast.
+* Fixed issue with parameter passing for Vertex AI components
+* Simplify auto generated API docs
+* Fix parameter passing for explainability on ModelUploadOp
+* Update naming of project and location parameters for all for GCPC components
+
+# Release 0.1.5
+* Experimental component for vertex forecasting preprocessing and validation
+
+# Release 0.1.4
+
+* Experimental component for tfp_anomaly_detection.
+* Experimental module for Custom Job Wrapper.
+* Fix to include YAML files in PyPI package.
+* Restructure the google_cloud_pipeline_components.  
 
 # Release 0.1.3
 

@@ -12,20 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as _path from 'path';
 import * as express from 'express';
+import { Response } from 'express-serve-static-core';
 import * as fs from 'fs';
-import RunUtils from '../src/lib/RunUtils';
-import helloWorldRuntime from './integration-test-runtime';
-import proxyMiddleware from './proxy-middleware';
+import * as _path from 'path';
+import { ApiExperiment, ApiListExperimentsResponse } from '../src/apis/experiment';
 import { ApiFilter, PredicateOp } from '../src/apis/filter';
-import { ApiListExperimentsResponse, ApiExperiment } from '../src/apis/experiment';
-import { ApiListJobsResponse, ApiJob } from '../src/apis/job';
-import { ApiListPipelinesResponse, ApiPipeline } from '../src/apis/pipeline';
+import { ApiJob, ApiListJobsResponse } from '../src/apis/job';
+import {
+  ApiListPipelinesResponse,
+  ApiListPipelineVersionsResponse,
+  ApiPipeline,
+  ApiPipelineVersion,
+} from '../src/apis/pipeline';
 import { ApiListRunsResponse, ApiResourceType, ApiRun, ApiRunStorageState } from '../src/apis/run';
 import { ExperimentSortKeys, PipelineSortKeys, RunSortKeys } from '../src/lib/Apis';
-import { Response } from 'express-serve-static-core';
-import { data as fixedData, namedPipelines } from './fixed-data';
+import RunUtils from '../src/lib/RunUtils';
+import {
+  data as fixedData,
+  namedPipelines,
+  PIPELINE_VERSIONS_LIST_FULL,
+  PIPELINE_VERSIONS_LIST_MAP,
+  v2PipelineSpecMap,
+} from './fixed-data';
+import helloWorldRuntime from './data/v1/runtime/integration-test-runtime';
+import proxyMiddleware from './proxy-middleware';
 
 const rocMetadataJsonPath = './eval-output/metadata.json';
 const rocMetadataJsonPath2 = './eval-output/metadata2.json';
@@ -499,14 +510,122 @@ export default (app: express.Application) => {
       return;
     }
     let filePath = '';
-    if (req.params.pid === namedPipelines.noParamsPipeline.id) {
-      filePath = './mock-backend/mock-conditional-template.yaml';
-    } else if (req.params.pid === namedPipelines.unstructuredTextPipeline.id) {
-      filePath = './mock-backend/mock-recursive-template.yaml';
+    if (req.params.pid === namedPipelines.noParams.id) {
+      filePath = './mock-backend/data/v1/template/mock-conditional-template.yaml';
+    } else if (req.params.pid === namedPipelines.unstructuredText.id) {
+      filePath = './mock-backend/data/v1/template/mock-recursive-template.yaml';
     } else {
-      filePath = './mock-backend/mock-template.yaml';
+      filePath = './mock-backend/data/v1/template/mock-template.yaml';
+    }
+    if (v2PipelineSpecMap.has(req.params.pid)) {
+      const specPath = v2PipelineSpecMap.get(req.params.pid);
+      if (specPath) {
+        filePath = specPath;
+      }
+      console.log(filePath);
     }
     res.send(JSON.stringify({ template: fs.readFileSync(filePath, 'utf-8') }));
+  });
+
+  app.get(v1beta1Prefix + '/pipeline_versions/:pid/templates', (req, res) => {
+    res.header('Content-Type', 'text/x-yaml');
+
+    // Find v2 pipeline template
+    const templatePath = v2PipelineSpecMap.get(req.params.pid);
+    if (templatePath != null) {
+      console.log(templatePath);
+      res.send(JSON.stringify({ template: fs.readFileSync(templatePath, 'utf-8') }));
+      return;
+    }
+
+    // Default and v1 version list. Return mock template consistently.
+    const version = fixedData.versions.find(p => p.id === req.params.pid);
+    if (!version) {
+      res.status(404).send(`No pipeline was found with ID: ${req.params.pid}`);
+      return;
+    }
+    const filePath = './mock-backend/mock-recursive-template.yaml';
+
+    res.send(JSON.stringify({ template: fs.readFileSync(filePath, 'utf-8') }));
+  });
+
+  app.get(v1beta1Prefix + '/pipeline_versions/:pid', (req, res) => {
+    res.header('Content-Type', 'application/json');
+    const pipeline = PIPELINE_VERSIONS_LIST_FULL.find(p => p.id === req.params.pid);
+    if (!pipeline) {
+      res.status(404).send(`No pipeline was found with ID: ${req.params.pid}`);
+      return;
+    }
+    res.json(pipeline);
+  });
+
+  app.get(v1beta1Prefix + '/pipeline_versions', (req, res) => {
+    // Sample query format:
+    // query: {
+    //   'resource_key.type': 'PIPELINE',
+    //   'resource_key.id': '8fbe3bd6-a01f-11e8-98d0-529269fb1459',
+    //   page_size: '50',
+    //   sort_by: 'created_at desc'
+    // },
+    if (
+      req.query['resource_key.id'] &&
+      req.query['resource_key.type'] === 'PIPELINE' &&
+      req.query.page_size > 0
+    ) {
+      const response: ApiListPipelineVersionsResponse = {
+        next_page_token: '',
+        versions: [],
+      };
+
+      let versions: ApiPipelineVersion[] =
+        PIPELINE_VERSIONS_LIST_MAP.get(req.query['resource_key.id']) || [];
+
+      if (versions.length === 0) {
+        const pipeline = fixedData.pipelines.find(p => p.id === req.query['resource_key.id']);
+
+        if (pipeline == null || !pipeline.default_version) {
+          return;
+        }
+
+        // Default version list is pipeline with single default version.
+        const pipeline_versions_list_response: ApiListPipelineVersionsResponse = {
+          total_size: 1,
+          versions: [pipeline.default_version],
+        };
+        res.json(pipeline_versions_list_response);
+      }
+
+      const start = req.query.page_token ? +req.query.page_token : 0;
+      const end = start + (+req.query.page_size || 20);
+      response.versions = versions.slice(start, end);
+
+      if (end < versions.length) {
+        response.next_page_token = end + '';
+      }
+
+      res.json(response);
+
+      return;
+    }
+    return;
+  });
+
+  app.get(v1beta1Prefix + '/pipeline_versions/:pid', (req, res) => {
+    // TODO: Temporary returning default version only. It requires
+    // keeping a record of all pipeline id in order to search non-default version.
+    res.header('Content-Type', 'application/json');
+    const pipeline = fixedData.pipelines.find(p => p.id === req.params.pid);
+    if (!pipeline) {
+      res
+        .status(404)
+        .send(
+          `No pipeline found with ID: ${req.params.pid}, non-default version can't be found yet.`,
+        );
+      return;
+    }
+    if (pipeline.default_version) {
+      res.json(pipeline.default_version);
+    }
   });
 
   function mockCreatePipeline(res: Response, name: string, body?: any): void {

@@ -3,9 +3,9 @@ module github.com/kubeflow/pipelines
 require (
 	github.com/Masterminds/squirrel v0.0.0-20190107164353-fa735ea14f09
 	github.com/VividCortex/mysqlerr v0.0.0-20170204212430-6c6b55f8796f
-	github.com/argoproj/argo-workflows/v3 v3.1.1
-	github.com/cenkalti/backoff v2.0.0+incompatible
-	github.com/denisenkom/go-mssqldb v0.0.0-20181014144952-4e0d7dc8888f // indirect
+	github.com/argoproj/argo-workflows/v3 v3.1.14
+	github.com/cenkalti/backoff v2.2.1+incompatible
+	github.com/eapache/go-resiliency v1.2.0
 	github.com/elazarl/goproxy v0.0.0-20181111060418-2ce16c963a8a // indirect
 	github.com/erikstmartin/go-testdb v0.0.0-20160219214506-8d10e4a1bae5 // indirect
 	github.com/fsnotify/fsnotify v1.4.9
@@ -14,7 +14,7 @@ require (
 	github.com/go-openapi/errors v0.19.9
 	github.com/go-openapi/runtime v0.19.24
 	github.com/go-openapi/strfmt v0.19.11
-	github.com/go-openapi/swag v0.19.12
+	github.com/go-openapi/swag v0.19.13
 	github.com/go-openapi/validate v0.20.1
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
@@ -27,36 +27,33 @@ require (
 	github.com/jinzhu/gorm v1.9.1
 	github.com/jinzhu/inflection v0.0.0-20180308033659-04140366298a // indirect
 	github.com/jinzhu/now v0.0.0-20181116074157-8ec929ed50c3 // indirect
+	github.com/kubeflow/pipelines/api v0.0.0-20211026071850-2e3fb5efff56
+	github.com/kubeflow/pipelines/v2 v2.0.0-20211026071850-2e3fb5efff56
 	github.com/lestrrat-go/strftime v1.0.4
 	github.com/mattn/go-sqlite3 v1.9.0
 	github.com/minio/minio-go v6.0.14+incompatible
 	github.com/peterhellberg/duration v0.0.0-20191119133758-ec6baeebcd10
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/client_golang v1.7.1
+	github.com/prometheus/client_golang v1.9.0
 	github.com/robfig/cron v1.2.0
 	github.com/sirupsen/logrus v1.6.0
 	github.com/spf13/viper v1.7.0
 	github.com/stretchr/testify v1.7.0
-	golang.org/x/net v0.0.0-20210226172049-e18ecbb05110
-	google.golang.org/api v0.20.0
-	google.golang.org/genproto v0.0.0-20200806141610-86f49bd18e98
-	google.golang.org/grpc v1.34.0
+	golang.org/x/net v0.0.0-20210326060303-6b1517762897
+	google.golang.org/genproto v0.0.0-20201203001206-6486ece9c497
+	google.golang.org/grpc v1.36.0
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.1.0
 	google.golang.org/protobuf v1.27.1
-	gopkg.in/yaml.v2 v2.4.0
 	honnef.co/go/tools v0.2.0 // indirect
-	k8s.io/api v0.19.6
-	k8s.io/apimachinery v0.19.6
-	k8s.io/client-go v0.19.6
+	k8s.io/api v0.20.4
+	k8s.io/apimachinery v0.21.2
+	k8s.io/client-go v0.20.4
 	k8s.io/code-generator v0.19.6
 	k8s.io/kubernetes v0.17.9
 	sigs.k8s.io/controller-runtime v0.7.0
 )
 
 replace (
-	// TODO: remove temporary patch
-	github.com/argoproj/argo-workflows/v3 v3.1.1 => github.com/Bobgy/argo-workflows/v3 v3.1.1-patch
-	github.com/kubeflow/pipelines/api => ./api
 	k8s.io/kubernetes => k8s.io/kubernetes v1.11.1
 	sigs.k8s.io/controller-tools => sigs.k8s.io/controller-tools v0.2.9
 )

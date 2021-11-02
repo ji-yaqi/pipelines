@@ -29,7 +29,7 @@ from ml_metadata.proto import Execution
 
 def verify_tasks(t: unittest.TestCase, tasks: dict[str, KfpTask]):
     task_names = [*tasks.keys()]
-    t.assertEqual(task_names, ['train-op', 'preprocess'], 'task names')
+    t.assertCountEqual(task_names, ['train-op', 'preprocess'], 'task names')
 
     preprocess = tasks['preprocess']
     train = tasks['train-op']
@@ -142,6 +142,11 @@ if __name__ == '__main__':
         TestCase(
             pipeline_func=two_step_pipeline,
             mode=kfp.dsl.PipelineExecutionMode.V1_LEGACY
+        ),
+        TestCase(
+            pipeline_func=two_step_pipeline,
+            verify_func=verify,
+            mode=kfp.dsl.PipelineExecutionMode.V2_ENGINE,
         ),
         # Verify default pipeline_root with MinIO
         TestCase(

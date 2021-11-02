@@ -13,29 +13,36 @@
 # limitations under the License.
 """Lightweight functions v2 with outputs."""
 from typing import NamedTuple
+import os
 from kfp import components, dsl
 from kfp.v2 import compiler
 from kfp.v2.dsl import Input, Dataset, Model, Metrics, component
 
+# In tests, we install a KFP package from the PR under test. Users should not
+# normally need to specify `kfp_package_path` in their component definitions.
+_KFP_PACKAGE_PATH = os.getenv('KFP_PACKAGE_PATH')
 
-@component
+
+@component(kfp_package_path=_KFP_PACKAGE_PATH)
 def concat_message(first: str, second: str) -> str:
     return first + second
 
 
-@component
+@component(kfp_package_path=_KFP_PACKAGE_PATH)
 def add_numbers(first: int, second: int) -> int:
     return first + second
 
 
-@component
+@component(kfp_package_path=_KFP_PACKAGE_PATH)
 def output_artifact(number: int, message: str) -> Dataset:
     result = [message for _ in range(number)]
     return '\n'.join(result)
 
 
-@component
-def output_named_tuple(artifact: Input[Dataset]) -> NamedTuple(
+@component(kfp_package_path=_KFP_PACKAGE_PATH)
+def output_named_tuple(
+    artifact: Input[Dataset]
+) -> NamedTuple(
         'Outputs', [
             ('scalar', str),
             ('metrics', Metrics),
@@ -62,7 +69,7 @@ def output_named_tuple(artifact: Input[Dataset]) -> NamedTuple(
     return output(scalar, metrics, model)
 
 
-@dsl.pipeline(pipeline_root='dummy_root', name='functions-with-outputs')
+@dsl.pipeline(name='functions-with-outputs')
 def pipeline(
     first_message: str = 'first',
     second_message: str = 'second',

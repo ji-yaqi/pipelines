@@ -6,7 +6,7 @@
         "inputDefinitions": {
           "parameters": {
             "input_location": {
-              "type": "STRING"
+              "parameterType": "STRING"
             }
           }
         },
@@ -14,7 +14,8 @@
           "artifacts": {
             "examples": {
               "artifactType": {
-                "schemaTitle": "system.Dataset"
+                "schemaTitle": "system.Dataset",
+                "schemaVersion": "0.0.1"
               }
             }
           }
@@ -26,16 +27,17 @@
           "artifacts": {
             "examples": {
               "artifactType": {
-                "schemaTitle": "system.Dataset"
+                "schemaTitle": "system.Dataset",
+                "schemaVersion": "0.0.1"
               }
             }
           },
           "parameters": {
             "n_epochs": {
-              "type": "INT"
+              "parameterType": "NUMBER_INTEGER"
             },
             "optimizer": {
-              "type": "STRING"
+              "parameterType": "STRING"
             }
           }
         },
@@ -43,7 +45,8 @@
           "artifacts": {
             "model": {
               "artifactType": {
-                "schemaTitle": "system.Model"
+                "schemaTitle": "system.Model",
+                "schemaVersion": "0.0.1"
               }
             }
           }
@@ -149,32 +152,26 @@
       "inputDefinitions": {
         "parameters": {
           "input_location": {
-            "type": "STRING"
+            "parameterType": "STRING"
           },
           "n_epochs": {
-            "type": "INT"
+            "parameterType": "NUMBER_INTEGER"
           },
           "optimizer": {
-            "type": "STRING"
+            "parameterType": "STRING"
           }
         }
       }
     },
-    "schemaVersion": "2.0.0",
-    "sdkVersion": "kfp-1.6.4"
+    "schemaVersion": "2.1.0",
+    "sdkVersion": "kfp-1.8.6"
   },
   "runtimeConfig": {
     "gcsOutputDirectory": "dummy_root",
-    "parameters": {
-      "input_location": {
-        "stringValue": "gs://test-bucket/pipeline_root"
-      },
-      "n_epochs": {
-        "intValue": "200"
-      },
-      "optimizer": {
-        "stringValue": "sgd"
-      }
+    "parameterValues": {
+      "input_location": "gs://test-bucket/pipeline_root",
+      "n_epochs": 200.0,
+      "optimizer": "sgd"
     }
   }
 }

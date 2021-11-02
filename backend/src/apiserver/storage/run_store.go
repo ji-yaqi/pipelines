@@ -207,7 +207,7 @@ func (s *RunStore) GetRun(runId string) (*model.RunDetail, error) {
 	if len(runs) == 0 {
 		return nil, util.NewResourceNotFoundError("Run", fmt.Sprint(runId))
 	}
-	if runs[0].WorkflowRuntimeManifest == "" {
+	if runs[0].WorkflowRuntimeManifest == ""  && runs[0].WorkflowSpecManifest != ""{
 		// This can only happen when workflow reporting is failed.
 		return nil, util.NewResourceNotFoundError("Failed to get run: %s", runId)
 	}
@@ -316,7 +316,7 @@ func (s *RunStore) scanRowsToRunDetails(rows *sql.Rows) ([]*model.RunDetail, err
 			PipelineSpec: model.PipelineSpec{
 				PipelineId:           pipelineId,
 				PipelineName:         pipelineName,
-				PipelineSpecManifest: pipelineRuntimeManifest,
+				PipelineSpecManifest: pipelineSpecManifest,
 				WorkflowSpecManifest: workflowSpecManifest,
 				Parameters:           parameters,
 			},
@@ -446,11 +446,11 @@ func (s *RunStore) UpdateRun(runID string, condition string, finishedAtInSec int
 		return util.NewInternalServerError(errors.New("Failed to update run"), "Failed to update run %s. More than 1 rows affected", runID)
 	} else if r == 0 {
 		tx.Rollback()
-		return util.NewInternalServerError(errors.New("Failed to update run"), "Failed to update run %s. Row not found", runID)
+		return util.Wrap(util.NewResourceNotFoundError("Run", fmt.Sprint(runID)), "Failed to update run")
 	}
 
 	if err := tx.Commit(); err != nil {
-		return util.NewInternalServerError(err, "failed to commit transaction")
+		return util.NewInternalServerError(err, "failed to commit transaction for run %s", runID)
 	}
 	return nil
 }
