@@ -51,13 +51,13 @@ def pipeline(name: Optional[str] = None,
     """
 
     def _pipeline(func: Callable):
+        print('in callable')
         if name:
             func._component_human_name = name
         if description:
             func._component_description = description
         if pipeline_root:
             func.pipeline_root = pipeline_root
-
         if pipeline_decorator_handler:
             return pipeline_decorator_handler(func) or func
         else:
@@ -103,6 +103,8 @@ class Pipeline:
         Args:
             name: The name of the pipeline.
         """
+        print('in init')
+
         self.name = name
         self.tasks = {}
         # Add the root group.

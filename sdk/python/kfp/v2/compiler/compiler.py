@@ -148,7 +148,9 @@ class Compiler:
                     name=arg_name, channel_type=arg_type))
 
         with pipeline_context.Pipeline(pipeline_name) as dsl_pipeline:
+            print('before ', dsl_pipeline.tasks)
             pipeline_func(*args_list)
+            print('after ',dsl_pipeline.tasks)
 
         if not dsl_pipeline.tasks:
             raise ValueError('Task is missing from pipeline.')

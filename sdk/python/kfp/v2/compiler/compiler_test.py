@@ -122,6 +122,45 @@ class CompilerTest(parameterized.TestCase):
         finally:
             shutil.rmtree(tmpdir)
 
+    def test_compile_nested_pipeline(self):
+
+        tmpdir = tempfile.mkdtemp()
+        try:
+            @dsl.component
+            def print_op(msg: str):
+                print(msg)
+
+            @dsl.component
+            def flip_coin_op() -> str:
+                """Flip a coin and output heads or tails randomly."""
+                import random
+                result = 'heads' if random.randint(0, 1) == 0 else 'tails'
+                return result
+
+            @dsl.pipeline(name='graph-component')
+            def graph_component(msg: str):
+                print_op(msg=msg)
+                flip_coin_op()
+
+            @dsl.pipeline(name='final-pipeline')
+            def pipeline(msg: str = 'final'):
+                print_op(msg=msg)
+                graph_component(msg=msg)
+
+            target_json_file = os.path.join(tmpdir, 'result.json')
+
+            compiler.Compiler().compile(
+                pipeline_func=pipeline, package_path=target_json_file)
+
+
+            self.assertTrue(os.path.exists(target_json_file))
+            with open(target_json_file, 'r') as f:
+                # print(f.read())
+                pass
+        finally:
+            shutil.rmtree(tmpdir)
+
+
     def test_compile_pipeline_with_dsl_graph_component_should_raise_error(self):
 
         with self.assertRaisesRegex(
