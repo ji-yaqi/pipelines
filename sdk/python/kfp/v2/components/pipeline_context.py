@@ -13,16 +13,20 @@
 # limitations under the License.
 """Definition for Pipeline."""
 
-from typing import Callable, Optional
+from os import name
+from typing import Any, Callable, Dict, Optional
 
 from kfp.v2.components import pipeline_task
 from kfp.v2.components import tasks_group
 from kfp.v2.components import utils
+from kfp.v2.components import pipeline_factory
 
 # This handler is called whenever the @pipeline decorator is applied.
 # It can be used by command-line DSL compiler to inject code that runs for every
 # pipeline definition.
 pipeline_decorator_handler = None
+
+main_pipeline = {}
 
 
 def pipeline(name: Optional[str] = None,
@@ -49,9 +53,9 @@ def pipeline(name: Optional[str] = None,
             pipeline. This is required if input/output URI placeholder is used in
             this pipeline.
     """
-
     def _pipeline(func: Callable):
-        print('in callable')
+        main_pipeline[name] = pipeline
+
         if name:
             func._component_human_name = name
         if description:
@@ -93,9 +97,9 @@ class Pipeline:
     _default_pipeline = None
 
     @staticmethod
-    def get_default_pipeline():
-        """Gets the default pipeline."""
-        return Pipeline._default_pipeline
+    def get_main_pipeline():
+        """Gets the outermost pipeline."""
+        return main_pipeline
 
     def __init__(self, name: str):
         """Creates a new instance of Pipeline.
@@ -103,8 +107,7 @@ class Pipeline:
         Args:
             name: The name of the pipeline.
         """
-        print('in init')
-
+        print('init pipeline', name)
         self.name = name
         self.tasks = {}
         # Add the root group.
@@ -116,21 +119,30 @@ class Pipeline:
 
     def __enter__(self):
 
-        if Pipeline._default_pipeline:
-            raise Exception('Nested pipelines are not allowed.')
+        if main_pipeline.get(self.name) is not None:
+            # compile everything except for main pipeline and return task_spec
+            # return pipeline_factory.create_graph_component_from_pipeline(
+            #   pipeline=_pipeline)
+            for pipeline_name, pipeline_object in main_pipeline.items():
+                print('key, value', pipeline_name, pipeline_object)
+                if pipeline_name == self.name:
 
-        Pipeline._default_pipeline = self
+                    pass
+                else:
+                    Pipeline._default_pipeline = pipeline_object
 
-        def register_task_and_generate_id(task: pipeline_task.PipelineTask):
-            return self.add_task(
-                task=task,
-                add_to_group=not getattr(task, 'is_exit_handler', False))
+                    def register_task_and_generate_id(task: pipeline_task.PipelineTask):
+                        print('registering', task.component_spec.name)
+                        return self.add_task(
+                            task=task,
+                            add_to_group=not getattr(task, 'is_exit_handler', False))
 
-        self._old_register_task_handler = (
-            pipeline_task.PipelineTask.register_task_handler)
-        pipeline_task.PipelineTask.register_task_handler = (
-            register_task_and_generate_id)
-        return self
+                    self._old_register_task_handler = (
+                        pipeline_task.PipelineTask.register_task_handler)
+                    pipeline_task.PipelineTask.register_task_handler = (
+                        register_task_and_generate_id)
+            print('after iteration')
+            return self
 
     def __exit__(self, *unused_args):
 

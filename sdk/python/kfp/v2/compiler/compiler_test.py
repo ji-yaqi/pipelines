@@ -152,7 +152,6 @@ class CompilerTest(parameterized.TestCase):
             compiler.Compiler().compile(
                 pipeline_func=pipeline, package_path=target_json_file)
 
-
             self.assertTrue(os.path.exists(target_json_file))
             with open(target_json_file, 'r') as f:
                 # print(f.read())
