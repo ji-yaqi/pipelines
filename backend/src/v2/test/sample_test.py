@@ -15,7 +15,6 @@
 # %%
 import os
 from typing import Dict, List
-import json
 import yaml
 from kubernetes import client as k8s_client
 import kfp
